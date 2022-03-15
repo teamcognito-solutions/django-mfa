@@ -14,8 +14,8 @@ from django.views.generic import FormView, ListView, TemplateView
 from django.contrib.auth import load_backend
 from django.contrib import auth, messages
 from django.urls import reverse, reverse_lazy
-from django.utils.http import is_safe_url
-from django.utils.translation import ugettext as _
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 from u2flib_server import u2f
 from .forms import *
 
@@ -305,7 +305,7 @@ class AddKeyView(OriginMixin, FormView):
         return super(AddKeyView, self).form_valid(form)
 
     def get_success_url(self):
-        if 'next' in self.request.GET and is_safe_url(self.request.GET['next']):
+        if 'next' in self.request.GET and url_has_allowed_host_and_scheme(self.request.GET['next']):
             return self.request.GET['next']
         else:
             return super(AddKeyView, self).get_success_url()
@@ -401,7 +401,7 @@ class VerifySecondFactorView(OriginMixin, TemplateView):
 
         redirect_to = self.request.POST.get(auth.REDIRECT_FIELD_NAME,
                                             self.request.GET.get(auth.REDIRECT_FIELD_NAME, ''))
-        if not is_safe_url(url=redirect_to, allowed_hosts=self.request.get_host()):
+        if not url_has_allowed_host_and_scheme(url=redirect_to, allowed_hosts=self.request.get_host()):
             redirect_to = resolve_url(settings.LOGIN_REDIRECT_URL)
         return HttpResponseRedirect(redirect_to)
 
